@@ -1,0 +1,80 @@
+body {
+  font-family: Ubuntu, serif;
+  overflow-x: hidden;
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.bg-theme {
+  background-image: linear-gradient(
+    90deg,
+    $theme-color,
+    $theme-color-light,
+    $theme-color
+  );
+}
+
+.bg-theme-basic {
+  background: $theme-color;
+}
+
+.nav-link{
+  color: white;
+  &:hover{
+    color: $silver;
+  }
+  &:focus{
+    color: $silver;
+  }
+}
+
+a {
+  text-decoration: none;
+}
+
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+address,
+ul {
+  margin: 0;
+  padding: 0;
+}
+
+.model-header {
+  padding: 0.25rem 1rem;
+  background-image: linear-gradient(90deg, $theme-color, $theme-color-red);
+  color: white;
+}
+
+.text-justify {
+  text-align: justify;
+}
+
+
+.zoom-able {
+  transition: all 0.3s ease-in-out;
+  &:hover {
+    transform: scale(1.05);
+  }
+}
+
+.aspect-two {
+  aspect-ratio: 1/1.25 !important;
+}
+
+.container, .container-fluid, .container-lg, .container-md, .container-sm, .container-xl, .container-xxl {
+  --bs-gutter-x: 1.5rem;
+  --bs-gutter-y: 0;
+  width: 100%;
+  padding: 0;
+  margin-right: auto;
+  margin-left: auto;
+}
