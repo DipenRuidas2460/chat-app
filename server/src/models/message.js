@@ -16,26 +16,26 @@ const Message = sequelize.define(
       type: DataTypes.INTEGER,
       references: {
         model: User,
-        key: 'id',
+        key: "id",
       },
     },
     content: {
       type: DataTypes.STRING,
-      allowNull: false,
-      trim: true,
     },
-    
+    allFiles: {
+      type: DataTypes.STRING,
+    },
     chatId: {
       type: DataTypes.INTEGER,
       references: {
-        model:Chat, 
-        key: 'id',
+        model: Chat,
+        key: "id",
       },
     },
   },
   {
     tableName: "Message",
-    updatedAt:false,
+    updatedAt: false,
   }
 );
 
@@ -45,7 +45,7 @@ const Message = sequelize.define(
 
 Message.belongsTo(User, { foreignKey: "senderId", as: "sender" });
 
-Chat.hasMany(Message, { foreignKey: "chatId", as:"msg" });
-Message.belongsTo(Chat, { foreignKey: "chatId", as:"msg"  });
+Chat.hasMany(Message, { foreignKey: "chatId", as: "msg" });
+Message.belongsTo(Chat, { foreignKey: "chatId", as: "msg" });
 
 module.exports = Message;

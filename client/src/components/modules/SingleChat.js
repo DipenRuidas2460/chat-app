@@ -20,12 +20,14 @@ import Lottie from "react-lottie-player";
 import animationData from "../../animation/typing.json";
 import { useRef } from "react";
 import { IoSend } from "react-icons/io5";
+import { FaPlus } from "react-icons/fa6";
 import { useNavigate } from "react-router-dom";
 import config from "../../config/config";
 
 function SingleChat() {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
+  const [selectedFile, setSelectedFile] = useState("");
   const [loading, setloading] = useState(false);
   const [socketConnected, setSocketConnected] = useState(false);
   const [typing, setTyping] = useState(false);
@@ -79,7 +81,7 @@ function SingleChat() {
 
   const sendMessages = async (e) => {
     if (e.key === "Enter" || e.type === "click") {
-      if (newMessage) {
+      if (newMessage || selectedFile) {
         socket.current.emit("stop typing", {
           room: selectedChat.id,
           sender: selectedChat.chatSenderId,
@@ -87,21 +89,28 @@ function SingleChat() {
         });
         try {
           const token = localStorage.getItem("token");
+
+          const formData = new FormData();
+
+          formData.append("content", newMessage);
+          if (selectedFile) {
+            formData.append("allFiles", selectedFile);
+          }
+
+          formData.append("chatId", selectedChat.id);
+
           const config = {
             headers: {
-              "Content-Type": "application/json",
               Authorization: `Bearer ${token}`,
             },
           };
 
           setNewMessage("");
+          setSelectedFile("");
 
           const { data } = await axios.post(
             `${host}/message`,
-            {
-              content: newMessage,
-              chatId: selectedChat.id,
-            },
+            formData,
             config
           );
 
@@ -113,7 +122,7 @@ function SingleChat() {
           });
           setMessages([...messages, data]);
         } catch (err) {
-          console.log(err);
+          console.log(err.message);
           toast({
             title: "Error Occured!",
             description: err.message,
@@ -128,7 +137,11 @@ function SingleChat() {
   };
 
   const typingHandler = (e) => {
-    setNewMessage(e.target.value);
+    if (e.target.files?.length > 0) {
+      setSelectedFile(e.target.files[0]);
+    } else if (e.target.value) {
+      setNewMessage(e.target.value);
+    }
 
     if (!socketConnected) {
       return;
@@ -192,17 +205,21 @@ function SingleChat() {
     });
 
     return () => {
-      socket.current.off("setup", user);
+      socket.current.off("typing", ({ room, sender, receiver }) => {
+        if (
+          selectedChat !== undefined &&
+          room === selectedChat.id &&
+          receiver === selectedChat.chatSenderId &&
+          sender === selectedChat.personId &&
+          sender === currentReceiver.id
+        ) {
+          setIsTyping(true);
+        }
+      });
       socket.current.off();
+      socket.current.off("setoff", user);
     };
-  }, [
-    socket,
-    selectedChat,
-    host,
-    user,
-    navigate,
-    currentReceiver,
-  ]);
+  }, [socket, selectedChat, host, user, navigate, currentReceiver]);
 
   useEffect(() => {
     fetchMessages();
@@ -213,7 +230,15 @@ function SingleChat() {
     socket.current.on(
       "message recieved",
       ({ data, room, sender, receiver }) => {
-        setMessages([...messages, data]);
+        if (
+          selectedChat !== undefined &&
+          room === selectedChat.id &&
+          receiver === selectedChat.chatSenderId &&
+          sender === selectedChat.personId &&
+          sender === currentReceiver.id
+        ) {
+          setMessages([...messages, data]);
+        }
       }
     );
   }, [socket, selectedChat, messages, currentReceiver]);
@@ -304,12 +329,28 @@ function SingleChat() {
               )}
               <div style={{ display: "flex", alignItems: "center" }}>
                 <Input
+                  type="file"
+                  id="fileInput"
+                  style={{ display: "none" }}
+                  onChange={typingHandler}
+                />
+                <label htmlFor="fileInput">
+                  <FaPlus size={30} style={{ cursor: "pointer" }} />
+                </label>
+                {selectedFile && (
+                  <Box mt={3}>
+                    <Text fontWeight="bold">Selected File:</Text>
+                    <Text>{selectedFile.name}</Text>
+                  </Box>
+                )}
+                <Input
                   variant="filled"
                   bg="#E0E0E0"
                   placeholder="Enter a message..."
                   onChange={typingHandler}
                   value={newMessage}
                 />
+
                 <Button
                   size="sm"
                   borderRadius="50%"

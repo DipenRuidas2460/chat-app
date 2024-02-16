@@ -3,6 +3,7 @@ import React from "react";
 import config from "../../config/config";
 
 function UserListItems({ u, handleFunction }) {
+  console.log("userlistItem:-", u);
   const host = config.BCKHOST;
   return (
     <Box
@@ -26,8 +27,8 @@ function UserListItems({ u, handleFunction }) {
         mr={2}
         size="sm"
         cursor="pointer"
-        name={`${u.firstName} ${u.lastName}`}
-        src={u.photo != null
+        name={`${u?.firstName} ${u?.lastName}`}
+        src={u?.photo != null
           ? `${host}/assets/image/${u.photo}`
           : ""}
       />

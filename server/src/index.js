@@ -79,7 +79,7 @@ io.on("connection", (socket) => {
     });
   });
 
-  socket.removeListener("setup", (userData) => {
+  socket.off("setoff", (userData) => {
     socket.leave(userData.id);
   });
 });

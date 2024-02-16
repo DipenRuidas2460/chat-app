@@ -145,7 +145,7 @@ function ChatPage({ token, userInfo }) {
                   bg="#B51A1A"
                 >
                   <Tooltip
-                    label="Search Partners to Chat"
+                    label="Search Users to Chat"
                     hasArrow
                     placement="bottom-end"
                   >
@@ -158,7 +158,7 @@ function ChatPage({ token, userInfo }) {
                     >
                       <i className="fas fa-search"></i>
                       <Text display={{ base: "none", md: "flex" }} px="4">
-                        Search Partners
+                        Search Users
                       </Text>
                     </Button>
                   </Tooltip>
@@ -166,7 +166,7 @@ function ChatPage({ token, userInfo }) {
                     <DrawerOverlay />
                     <DrawerContent>
                       <DrawerHeader borderBottomWidth="1px">
-                        Search Partners
+                        Search Users
                       </DrawerHeader>
                       <DrawerBody>
                         <Box display="flex" pb={2}>

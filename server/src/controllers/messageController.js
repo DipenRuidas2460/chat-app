@@ -2,12 +2,26 @@ const asyncHandler = require("express-async-handler");
 const User = require("../models/user");
 const Message = require("../models/message");
 const Chat = require("../models/chat");
+const path = require("path");
 
 const sendMessage = asyncHandler(async (req, res) => {
   try {
     const { content, chatId } = req.body;
-
     const loggedUserId = req.person.id;
+    let file = null;
+    let filTypeArr = null;
+    let randomInRange = null;
+    if (req.files?.allFiles) {
+      file = req.files.allFiles;
+      filTypeArr = file.name.split(".");
+      randomInRange = Math.floor(Math.random() * 10) + 1;
+      const filePath = path.join(
+        __dirname,
+        "../uploads/files/",
+        `${randomInRange}_file.${filTypeArr[1]}`
+      );
+      await file.mv(filePath);
+    }
 
     if (!content && !chatId) {
       return res
@@ -16,12 +30,18 @@ const sendMessage = asyncHandler(async (req, res) => {
     }
 
     const newMessage = {
-      content: content,
+      content: content ? content : null,
+      allFiles: file ? `${randomInRange}_file.${filTypeArr[1]}` : null,
       chatId: chatId,
       senderId: loggedUserId,
     };
 
     const message = await Message.create(newMessage);
+
+    await Chat.update(
+      { createdAt: message.createdAt },
+      { where: { id: chatId } }
+    );
 
     const populatedMessage = await Message.findByPk(message.id, {
       include: [
@@ -51,11 +71,6 @@ const sendMessage = asyncHandler(async (req, res) => {
       ],
     });
 
-    await Chat.update(
-      { createdAt: message.createdAt, latestMessage: populatedMessage },
-      { where: { id: chatId } }
-    );
-
     const messageSenderId = populatedMessage.msg.chatSenderId;
     const messageChatSenderId = populatedMessage.msg.chatsender.id;
 
@@ -74,7 +89,7 @@ const sendMessage = asyncHandler(async (req, res) => {
     await populatedMessage.save();
     return res.status(200).json(populatedMessage);
   } catch (error) {
-    console.error(error);
+    console.log(error);
     return res.status(error.status || 500).send(error.message);
   }
 });

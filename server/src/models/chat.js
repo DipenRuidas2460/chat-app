@@ -39,9 +39,6 @@ const Chat = sequelize.define(
         key: "id",
       },
     },
-    latestMessage: {
-      type: DataTypes.JSON,
-    },
   },
   {
     tableName: "Chat",

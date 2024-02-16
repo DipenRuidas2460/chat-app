@@ -7,8 +7,9 @@ import {
   isSameSenderMargin,
   isSameUser,
 } from "../../chatLogic/chatLogics";
-import { Avatar, Tooltip } from "@chakra-ui/react";
+import { Avatar, Box, Tooltip } from "@chakra-ui/react";
 import config from "../../config/config";
+import { Link } from "react-router-dom";
 
 const ScrollableChat = ({ messages }) => {
   const { user } = ChatState();
@@ -67,7 +68,32 @@ const ScrollableChat = ({ messages }) => {
                     </sup>
                   }
                   {<br />}
-                  {m.content}{" "}
+                  {m.content && m.allFiles ? (
+                    <Box>
+                      <Link
+                        to={`${host}/assets/files/${m.allFiles}`}
+                        target="_blank"
+                        style={{ cursor: "pointer" }}
+                      >
+                        {host}/assets/files/{m.allFiles}
+                      </Link>
+                      <br />
+                      <br />
+                      {m.content}
+                    </Box>
+                  ) : m.content ? (
+                    m.content
+                  ) : m.allFiles ? (
+                    <Link
+                      to={`${host}/assets/files/${m.allFiles}`}
+                      target="_blank"
+                      style={{ cursor: "pointer" }}
+                    >
+                      {host}/assets/files/{m.allFiles}
+                    </Link>
+                  ) : (
+                    ""
+                  )}{" "}
                   {<sub key={i + 1}>{m.createdAt.slice(11, 16)}</sub>}
                 </div>
               }
