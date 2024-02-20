@@ -196,7 +196,7 @@ const fetchChats = async (req, res) => {
 
 const createGroupChat = async (req, res) => {
   try {
-    const { users, chatName } = req.body;
+    const { chatName, users } = req.body;
     if (!users || !chatName) {
       return res.status(400).send({ message: "Please fill all the fields" });
     }
@@ -226,7 +226,24 @@ const createGroupChat = async (req, res) => {
       ],
     });
 
-    res.status(200).json(fullGroupChat);
+    if (!fullGroupChat) {
+      return res.status(404).send({ status: false, msg: "Data not found!" });
+    }
+
+    const userArr = [];
+
+    for (let i = 0; i < fullGroupChat.users.length; i++) {
+      if (typeof fullGroupChat.users[i] === "number") {
+        const groupUserDetail = await User.findOne({
+          where: { id: fullGroupChat.users[i] },
+          attributes: ["id", "firstName", "lastName", "email", "photo"],
+        });
+        userArr.push(groupUserDetail);
+      }
+    }
+    fullGroupChat.users = userArr;
+    await fullGroupChat.save();
+    return res.status(200).json(fullGroupChat);
   } catch (error) {
     return res
       .status(500)
@@ -284,7 +301,7 @@ const removeFromGroup = async (req, res) => {
       }
     }
 
-    const updatedChat = await Chat.findByPk(chatId, {
+    const fullGroupChat = await Chat.findByPk(chatId, {
       include: [
         {
           model: User,
@@ -294,7 +311,24 @@ const removeFromGroup = async (req, res) => {
       ],
     });
 
-    res.json(updatedChat);
+    if (!fullGroupChat) {
+      return res.status(404).send({ status: false, msg: "Data not found!" });
+    }
+
+    const userArr = [];
+
+    for (let i = 0; i < fullGroupChat.users.length; i++) {
+      if (typeof fullGroupChat.users[i] === "number") {
+        const groupUserDetail = await User.findOne({
+          where: { id: fullGroupChat.users[i] },
+          attributes: ["id", "firstName", "lastName", "email", "photo"],
+        });
+        userArr.push(groupUserDetail);
+      }
+    }
+    fullGroupChat.users = userArr;
+    await fullGroupChat.save();
+    return res.status(200).json(fullGroupChat);
   } catch (error) {
     console.error("Error removing user from group:", error);
     res
@@ -318,7 +352,7 @@ const addToGroup = async (req, res) => {
       await chat.save();
     }
 
-    const updatedChat = await Chat.findByPk(chatId, {
+    const fullGroupChat = await Chat.findByPk(chatId, {
       include: [
         {
           model: User,
@@ -328,7 +362,24 @@ const addToGroup = async (req, res) => {
       ],
     });
 
-    res.json(updatedChat);
+    if (!fullGroupChat) {
+      return res.status(404).send({ status: false, msg: "Data not found!" });
+    }
+
+    const userArr = [];
+
+    for (let i = 0; i < fullGroupChat.users.length; i++) {
+      if (typeof fullGroupChat.users[i] === "number") {
+        const groupUserDetail = await User.findOne({
+          where: { id: fullGroupChat.users[i] },
+          attributes: ["id", "firstName", "lastName", "email", "photo"],
+        });
+        userArr.push(groupUserDetail);
+      }
+    }
+    fullGroupChat.users = userArr;
+    await fullGroupChat.save();
+    return res.status(200).json(fullGroupChat);
   } catch (error) {
     console.error("Error adding user to group:", error);
     res

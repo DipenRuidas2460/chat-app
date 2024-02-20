@@ -2,8 +2,7 @@ import { Avatar, Box, Text } from "@chakra-ui/react";
 import React from "react";
 import config from "../../config/config";
 
-function UserListItems({ u, handleFunction }) {
-  console.log("userlistItem:-", u);
+function UserListItems({ searchUser, handleFunction }) {
   const host = config.BCKHOST;
   return (
     <Box
@@ -27,16 +26,16 @@ function UserListItems({ u, handleFunction }) {
         mr={2}
         size="sm"
         cursor="pointer"
-        name={`${u?.firstName} ${u?.lastName}`}
-        src={u?.photo != null
-          ? `${host}/assets/image/${u.photo}`
+        name={`${searchUser?.firstName} ${searchUser?.lastName}`}
+        src={searchUser?.photo != null
+          ? `${host}/assets/image/${searchUser.photo}`
           : ""}
       />
       <Box>
-        <Text>{`${u.firstName} ${u.lastName}`}</Text>
+        <Text>{`${searchUser?.firstName} ${searchUser?.lastName}`}</Text>
         <Text fontSize="xs">
           <b>Email : </b>
-          {u.email}
+          {searchUser?.email}
         </Text>
       </Box>
     </Box>

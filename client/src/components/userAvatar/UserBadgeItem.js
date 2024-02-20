@@ -1,7 +1,7 @@
 import { CloseIcon } from "@chakra-ui/icons";
 import { Badge } from "@chakra-ui/layout";
 
-const UserBadgeItem = ({ user, handleFunction, admin }) => {
+const UserBadgeItem = ({ userDetail, handleFunction, admin }) => {
   return (
     <Badge
       px={2}
@@ -15,8 +15,8 @@ const UserBadgeItem = ({ user, handleFunction, admin }) => {
       cursor="pointer"
       onClick={handleFunction}
     >
-      {user.firstName}{" "}{user.lastName}
-      {admin === user.id && <span> (Admin)</span>}
+      {userDetail?.firstName}{" "}{userDetail?.lastName}
+      {admin === userDetail?.id && <span> (Admin)</span>}
       <CloseIcon pl={1} />
     </Badge>
   );

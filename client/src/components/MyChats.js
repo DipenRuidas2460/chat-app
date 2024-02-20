@@ -109,7 +109,10 @@ function MyChats({ fetchAgain }) {
                 key={chat.id}
               >
                 <Text>
-                  {getSender(loggedUser, [chat?.chatsender, chat?.receive])}
+                  {chat?.chatName && chat?.isGroupChat
+                    ? chat.chatName
+                    : getSender(loggedUser, [chat?.chatsender, chat?.receive])}
+                  
                 </Text>
               </Box>
             ))}

@@ -184,7 +184,7 @@ function ChatPage({ token, userInfo }) {
                           searchResult?.map((u) => (
                             <UserListItems
                               key={u.id}
-                              u={u}
+                              searchUser={u}
                               handleFunction={() => accessChat(u.id)}
                             />
                           ))

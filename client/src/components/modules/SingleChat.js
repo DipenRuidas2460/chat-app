@@ -24,7 +24,7 @@ import { FaPlus } from "react-icons/fa6";
 import { useNavigate } from "react-router-dom";
 import config from "../../config/config";
 
-function SingleChat() {
+function SingleChat({ fetchAgain, setFetchAgain }) {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [selectedFile, setSelectedFile] = useState("");
@@ -264,10 +264,12 @@ function SingleChat() {
             />
 
             <>
-              {getSender(user, [
-                selectedChat?.chatsender,
-                selectedChat?.receive,
-              ])}
+              {selectedChat.chatName && selectedChat.isGroupChat
+                ? selectedChat.chatName
+                : getSender(user, [
+                    selectedChat?.chatsender,
+                    selectedChat?.receive,
+                  ])}
 
               <Box
                 display="flex"

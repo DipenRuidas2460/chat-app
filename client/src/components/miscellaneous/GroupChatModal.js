@@ -24,7 +24,6 @@ const GroupChatModal = ({ children }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [groupChatName, setGroupChatName] = useState();
   const [selectedUsers, setSelectedUsers] = useState([]);
-  const [search, setSearch] = useState("");
   const [searchResult, setSearchResult] = useState([]);
   const [loading, setLoading] = useState(false);
   const toast = useToast();
@@ -48,8 +47,6 @@ const GroupChatModal = ({ children }) => {
   };
 
   const handleSearch = async (query) => {
-    console.log("query:-", query)
-    setSearch(query);
     if (!query) {
       return;
     }
@@ -63,10 +60,9 @@ const GroupChatModal = ({ children }) => {
         },
       };
       const { data } = await axios.get(
-        `${host}/customer/getAllUsers?search=${search}`,
+        `${host}/customer/getAllUsers?search=${query}`,
         config
       );
-      console.log("searchData:--", data.data);
       setLoading(false);
       setSearchResult(data.data);
     } catch (error) {
@@ -112,7 +108,6 @@ const GroupChatModal = ({ children }) => {
         },
         config
       );
-      console.log("group:-", data);
       setChats([data, ...chats]);
       onClose();
       toast({
@@ -169,21 +164,20 @@ const GroupChatModal = ({ children }) => {
               {selectedUsers.map((u) => (
                 <UserBadgeItem
                   key={u.id}
-                  user={u}
+                  userDetail={u}
                   handleFunction={() => handleDelete(u)}
                 />
               ))}
             </Box>
             {loading ? (
-              // <ChatLoading />
               <div>Loading...</div>
             ) : (
               searchResult
                 ?.slice(0, 4)
                 .map((u, i) => (
-                    <UserListItems
+                  <UserListItems
                     key={i}
-                    user={u}
+                    searchUser={u}
                     handleFunction={() => handleGroup(u)}
                   />
                 ))
