@@ -23,6 +23,7 @@ import { IoSend } from "react-icons/io5";
 import { FaPlus } from "react-icons/fa6";
 import { useNavigate } from "react-router-dom";
 import config from "../../config/config";
+import UpdateGroupChatModel from "../miscellaneous/UpdateGroupChatModel";
 
 function SingleChat({ fetchAgain, setFetchAgain }) {
   const [messages, setMessages] = useState([]);
@@ -264,25 +265,31 @@ function SingleChat({ fetchAgain, setFetchAgain }) {
             />
 
             <>
-              {selectedChat.chatName && selectedChat.isGroupChat
-                ? selectedChat.chatName
-                : getSender(user, [
-                    selectedChat?.chatsender,
-                    selectedChat?.receive,
-                  ])}
+              {messages &&
+                (selectedChat.isGroupChat ? (
+                  <>
+                    {selectedChat.chatName.toUpperCase()}
+                    <UpdateGroupChatModel
+                      fetchMessages={fetchMessages}
+                      fetchAgain={fetchAgain}
+                      setFetchAgain={setFetchAgain}
+                    />
+                  </>
+                ) : (
+                  <>
+                    {getSender(user, [
+                      selectedChat?.chatsender,
+                      selectedChat?.receive,
+                    ])}
 
-              <Box
-                display="flex"
-                justifyContent={{ base: "space-between" }}
-                alignItems="center"
-              >
-                <ProfileMenu
-                  user={getSenderFull(user, [
-                    selectedChat.chatsender,
-                    selectedChat.receive,
-                  ])}
-                />
-              </Box>
+                    <ProfileMenu
+                      user={getSenderFull(user, [
+                        selectedChat.chatsender,
+                        selectedChat.receive,
+                      ])}
+                    />
+                  </>
+                ))}
             </>
           </Box>
 

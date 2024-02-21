@@ -285,20 +285,38 @@ const removeFromGroup = async (req, res) => {
   try {
     const { chatId, personId } = req.body;
 
-    const chat = await Chat.findByPk(chatId);
+    const chat = await Chat.findByPk(chatId, {
+      include: [
+        {
+          model: User,
+          as: "groupAdmin",
+          attributes: { exclude: ["password"] },
+        },
+      ],
+    });
 
     if (!chat) {
       return res.status(404).send({ message: "Chat Not Found" });
     }
 
-    if (Array.isArray(chat.users)) {
-      const findInd = chat.users.indexOf(personId);
-      if (findInd === -1) {
-        return res.status(404).send({ message: "User not found in the chat" });
-      } else {
-        chat.users.splice(findInd, 1);
-        await chat.save();
-      }
+    function checkIndex(p) {
+      return p.id === personId;
+    }
+
+    const findInd = chat.users.findIndex(checkIndex);
+    if (findInd === -1) {
+      return res.status(404).send({ message: "User not found in the chat" });
+    } else {
+      chat.users.splice(findInd, 1);
+    }
+
+    const response = await Chat.update(
+      { users: chat.users },
+      { where: { id: chatId } }
+    );
+
+    if (response[0] === 0) {
+      return res.status(404).send({ status: false, msg: "Data not updated!" });
     }
 
     const fullGroupChat = await Chat.findByPk(chatId, {
@@ -310,24 +328,6 @@ const removeFromGroup = async (req, res) => {
         },
       ],
     });
-
-    if (!fullGroupChat) {
-      return res.status(404).send({ status: false, msg: "Data not found!" });
-    }
-
-    const userArr = [];
-
-    for (let i = 0; i < fullGroupChat.users.length; i++) {
-      if (typeof fullGroupChat.users[i] === "number") {
-        const groupUserDetail = await User.findOne({
-          where: { id: fullGroupChat.users[i] },
-          attributes: ["id", "firstName", "lastName", "email", "photo"],
-        });
-        userArr.push(groupUserDetail);
-      }
-    }
-    fullGroupChat.users = userArr;
-    await fullGroupChat.save();
     return res.status(200).json(fullGroupChat);
   } catch (error) {
     console.error("Error removing user from group:", error);
@@ -339,17 +339,31 @@ const removeFromGroup = async (req, res) => {
 
 const addToGroup = async (req, res) => {
   try {
-    const { chatId, personId } = req.body;
+    const { chatId, personInfo } = req.body;
 
-    const chat = await Chat.findByPk(chatId);
+    const chat = await Chat.findByPk(chatId, {
+      include: [
+        {
+          model: User,
+          as: "groupAdmin",
+          attributes: { exclude: ["password"] },
+        },
+      ],
+    });
 
     if (!chat) {
       return res.status(404).send({ message: "Chat Not Found" });
     }
 
-    if (Array.isArray(chat.users)) {
-      chat.users.push(personId);
-      await chat.save();
+    chat.users.push(personInfo);
+
+    const response = await Chat.update(
+      { users: chat.users },
+      { where: { id: chatId } }
+    );
+
+    if (response[0] === 0) {
+      return res.status(404).send({ status: false, msg: "Data not updated!" });
     }
 
     const fullGroupChat = await Chat.findByPk(chatId, {
@@ -366,19 +380,6 @@ const addToGroup = async (req, res) => {
       return res.status(404).send({ status: false, msg: "Data not found!" });
     }
 
-    const userArr = [];
-
-    for (let i = 0; i < fullGroupChat.users.length; i++) {
-      if (typeof fullGroupChat.users[i] === "number") {
-        const groupUserDetail = await User.findOne({
-          where: { id: fullGroupChat.users[i] },
-          attributes: ["id", "firstName", "lastName", "email", "photo"],
-        });
-        userArr.push(groupUserDetail);
-      }
-    }
-    fullGroupChat.users = userArr;
-    await fullGroupChat.save();
     return res.status(200).json(fullGroupChat);
   } catch (error) {
     console.error("Error adding user to group:", error);

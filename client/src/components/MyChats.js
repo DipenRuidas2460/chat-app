@@ -45,8 +45,6 @@ function MyChats({ fetchAgain }) {
     }
   };
 
-  useEffect(() => {}, []);
-
   useEffect(() => {
     setLoggedUser(JSON.parse(localStorage.getItem("userInfo")));
     fetchAllChats();
@@ -109,10 +107,9 @@ function MyChats({ fetchAgain }) {
                 key={chat.id}
               >
                 <Text>
-                  {chat?.chatName && chat?.isGroupChat
+                  {chat.isGroupChat
                     ? chat.chatName
-                    : getSender(loggedUser, [chat?.chatsender, chat?.receive])}
-                  
+                    : getSender(loggedUser, [chat.chatsender, chat.receive])}
                 </Text>
               </Box>
             ))}

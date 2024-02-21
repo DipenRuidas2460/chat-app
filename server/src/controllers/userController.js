@@ -414,6 +414,7 @@ const getAllUsersByQuery = asyncHandler(async (req, res) => {
         ...keyword,
         id: { [Op.not]: req.person.id },
       },
+      attributes: ["id", "firstName", "lastName", "email", "photo", "role", "phoneNumber"],
     });
 
     return res.status(200).json({

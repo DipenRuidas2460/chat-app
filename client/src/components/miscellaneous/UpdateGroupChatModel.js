@@ -23,14 +23,18 @@ import UserListItems from "../userAvatar/UserListItems";
 import UserBadgeItem from "../userAvatar/UserBadgeItem";
 import config from "../../config/config";
 
-const UpdateGroupChatModel = ({fetchMessages, fetchAgain, setFetchAgain }) => {
+const UpdateGroupChatModel = ({
+  fetchMessages,
+  fetchAgain,
+  setFetchAgain,
+}) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [groupChatName, setGroupChatName] = useState("");
   const [searchResult, setSearchResult] = useState([]);
   const [loading, setLoading] = useState(false);
   const [renameLoading, setRenameLoading] = useState(false);
   const toast = useToast();
-  const { selectedChat, setSelectedChat, user } = ChatState;
+  const { user, selectedChat, setSelectedChat } = ChatState();
   const host = config.BCKHOST;
   const token = localStorage.getItem("token");
 
@@ -41,14 +45,14 @@ const UpdateGroupChatModel = ({fetchMessages, fetchAgain, setFetchAgain }) => {
 
     try {
       setLoading(true);
-      const config = {
+      const configare = {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       };
       const { data } = await axios.get(
         `${host}/customer/getAllUsers?search=${query}`,
-        config
+        configare
       );
       setLoading(false);
       setSearchResult(data.data);
@@ -67,10 +71,9 @@ const UpdateGroupChatModel = ({fetchMessages, fetchAgain, setFetchAgain }) => {
 
   const handleRename = async () => {
     if (!groupChatName) return;
-
     try {
       setRenameLoading(true);
-      const config = {
+      const configare = {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -81,17 +84,17 @@ const UpdateGroupChatModel = ({fetchMessages, fetchAgain, setFetchAgain }) => {
           chatId: selectedChat.id,
           chatName: groupChatName,
         },
-        config
+        configare
       );
 
-      console.log("chat:--",data);
       setSelectedChat(data);
       setFetchAgain(!fetchAgain);
       setRenameLoading(false);
     } catch (error) {
+      console.log(error);
       toast({
         title: "Error Occured!",
-        description: error.response.data.message,
+        description: error.message,
         status: "error",
         duration: 5000,
         isClosable: true,
@@ -127,7 +130,7 @@ const UpdateGroupChatModel = ({fetchMessages, fetchAgain, setFetchAgain }) => {
 
     try {
       setLoading(true);
-      const config = {
+      const configare = {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -136,18 +139,19 @@ const UpdateGroupChatModel = ({fetchMessages, fetchAgain, setFetchAgain }) => {
         `${host}/groupadd`,
         {
           chatId: selectedChat.id,
-          personId: user1.id,
+          personInfo: user1,
         },
-        config
+        configare
       );
 
       setSelectedChat(data);
       setFetchAgain(!fetchAgain);
       setLoading(false);
     } catch (error) {
+      console.log(error);
       toast({
         title: "Error Occured!",
-        description: error.response.data.message,
+        description: error.message,
         status: "error",
         duration: 5000,
         isClosable: true,
@@ -172,7 +176,7 @@ const UpdateGroupChatModel = ({fetchMessages, fetchAgain, setFetchAgain }) => {
 
     try {
       setLoading(true);
-      const config = {
+      const configare = {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -183,7 +187,7 @@ const UpdateGroupChatModel = ({fetchMessages, fetchAgain, setFetchAgain }) => {
           chatId: selectedChat.id,
           personId: user1.id,
         },
-        config
+        configare
       );
 
       user1.id === user.id ? setSelectedChat() : setSelectedChat(data);
@@ -191,9 +195,10 @@ const UpdateGroupChatModel = ({fetchMessages, fetchAgain, setFetchAgain }) => {
       fetchMessages();
       setLoading(false);
     } catch (error) {
+      console.log(error);
       toast({
         title: "Error Occured!",
-        description: error.response.data.message,
+        description: error.message,
         status: "error",
         duration: 5000,
         isClosable: true,
@@ -217,22 +222,22 @@ const UpdateGroupChatModel = ({fetchMessages, fetchAgain, setFetchAgain }) => {
             d="flex"
             justifyContent="center"
           >
-            {selectedChat?.chatName}
+            {selectedChat.chatName}
           </ModalHeader>
 
           <ModalCloseButton />
           <ModalBody d="flex" flexDir="column" alignItems="center">
             <Box w="100%" d="flex" flexWrap="wrap" pb={3}>
-              {selectedChat?.users.map((u, i) => (
-                <UserBadgeItem
-                  key={i}
-                  userDetail={u}
-                  admin={selectedChat.groupAdmin}
-                  handleFunction={() => handleRemove(u)}
-                />
-              ))}
+              {selectedChat.users.map((u, i) => (
+                    <UserBadgeItem
+                      key={i}
+                      userDetail={u}
+                      handleFunction={() => handleRemove(u)}
+                      admin={selectedChat.groupAdminId}
+                    />
+                  ))}
             </Box>
-            <FormControl d="flex">
+            <FormControl display="flex">
               <Input
                 placeholder="Chat Name"
                 mb={3}
