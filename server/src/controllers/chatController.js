@@ -2,7 +2,7 @@ const asyncHandler = require("express-async-handler");
 const User = require("../models/user");
 const Message = require("../models/message");
 const Chat = require("../models/chat");
-const { Op } = require("sequelize");
+const { Op, Sequelize } = require("sequelize");
 
 const accessChat = asyncHandler(async (req, res) => {
   try {
@@ -71,7 +71,6 @@ const accessChat = asyncHandler(async (req, res) => {
       return res.status(200).json({ isChat: isChat[0] });
     } else {
       const chatData = {
-        chatName: "sender",
         isGroupChat: false,
         chatSenderId: req.person.id,
         personId: personId,
@@ -136,15 +135,21 @@ const fetchChats = async (req, res) => {
     const results = await Chat.findAll({
       where: {
         [Op.or]: [
+          Sequelize.literal(
+            `JSON_CONTAINS(users, '${JSON.stringify([{ id: req.person.id }])}')`
+          ),
           { "$chatsender.id$": req.person.id },
           { "$receive.id$": req.person.id },
         ],
       },
+
       include: [
         {
           model: User,
           as: "chatsender",
-          attributes: { exclude: ["password", "fpToken", "role", "updatedAt"] },
+          attributes: {
+            exclude: ["password", "fpToken", "role", "updatedAt"],
+          },
         },
 
         {
@@ -165,31 +170,33 @@ const fetchChats = async (req, res) => {
       const loggedUserId = req.person.id;
 
       for (let i = 0; i < results.length; i++) {
-        const chatSenId = results[i].chatSenderId;
-        const chatSenObjId = results[i].chatsender.id;
+        if (results[i].chatSenderId || results[i].personId) {
+          const chatSenId = results[i].chatSenderId;
+          const chatSenObjId = results[i].chatsender?.id;
 
-        if (loggedUserId !== chatSenId) {
-          [results[i].chatSenderId, results[i].personId] = [
-            results[i].personId,
-            results[i].chatSenderId,
-          ];
+          if (loggedUserId !== chatSenId) {
+            [results[i].chatSenderId, results[i].personId] = [
+              results[i].personId,
+              results[i].chatSenderId,
+            ];
+          }
+
+          if (loggedUserId !== chatSenObjId) {
+            [results[i].chatsender, results[i].receive] = [
+              results[i].receive,
+              results[i].chatsender,
+            ];
+          }
+
+          await results[i].save();
         }
-
-        if (loggedUserId !== chatSenObjId) {
-          [results[i].chatsender, results[i].receive] = [
-            results[i].receive,
-            results[i].chatsender,
-          ];
-        }
-
-        await results[i].save();
       }
       return res.status(200).send({ status: true, result: results });
     } else {
       return res.status(200).send({ status: true, result: results });
     }
   } catch (error) {
-    console.error(error.message);
+    console.error(error);
     res.status(400).send({ msg: error.message });
   }
 };

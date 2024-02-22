@@ -117,7 +117,8 @@ const UpdateGroupChatModel = ({
       return;
     }
 
-    if (selectedChat.groupAdmin.id !== user.id) {
+    if (selectedChat.groupAdminId
+      !== user.id) {
       toast({
         title: "Only admins can add someone!",
         status: "error",
@@ -163,7 +164,8 @@ const UpdateGroupChatModel = ({
   };
 
   const handleRemove = async (user1) => {
-    if (selectedChat.groupAdmin.id !== user.id && user1.id !== user.id) {
+    if (selectedChat.groupAdminId
+      !== user.id && user1.id !== user.id) {
       toast({
         title: "Only admins can remove someone!",
         status: "error",

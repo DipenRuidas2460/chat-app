@@ -45,7 +45,7 @@ io.on("connection", (socket) => {
     socket.emit("connected");
   });
 
-  socket.on("join chat", ({ sender, receiver, room }) => {
+  socket.on("join chat", ({ room }) => {
     socket.join(room);
   });
 
@@ -57,11 +57,23 @@ io.on("connection", (socket) => {
     });
   });
 
+  socket.on("typing group", ({ room }) => {
+    io.to(room).emit("typing group", {
+      room: room,
+    });
+  });
+
   socket.on("stop typing", ({ room, sender, receiver }) => {
     io.to(room).emit("stop typing", {
       room: room,
       sender: sender,
       receiver: receiver,
+    });
+  });
+
+  socket.on("stop typing group", ({ room }) => {
+    io.to(room).emit("stop typing group", {
+      room: room,
     });
   });
 
@@ -76,6 +88,13 @@ io.on("connection", (socket) => {
       room: room,
       sender: sender,
       receiver: receiver,
+    });
+  });
+
+  socket.on("new message group", ({ data, room, users }) => {
+    io.to(room).emit("message recieved group", {
+      data: data,
+      room: room,
     });
   });
 

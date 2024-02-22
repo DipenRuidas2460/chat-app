@@ -60,9 +60,7 @@ function SingleChat({ fetchAgain, setFetchAgain }) {
       );
 
       socket.current.emit("join chat", {
-        sender: selectedChat?.chatSenderId,
-        receiver: selectedChat?.personId,
-        room: selectedChat?.id,
+        room: selectedChat.id,
       });
 
       setMessages(data);
@@ -83,11 +81,18 @@ function SingleChat({ fetchAgain, setFetchAgain }) {
   const sendMessages = async (e) => {
     if (e.key === "Enter" || e.type === "click") {
       if (newMessage || selectedFile) {
-        socket.current.emit("stop typing", {
-          room: selectedChat.id,
-          sender: selectedChat.chatSenderId,
-          receiver: selectedChat.personId,
-        });
+        if (selectedChat.chatSenderId && selectedChat.personId) {
+          socket.current.emit("stop typing", {
+            room: selectedChat.id,
+            sender: selectedChat.chatSenderId,
+            receiver: selectedChat.personId,
+          });
+        } else {
+          socket.current.emit("stop typing group", {
+            room: selectedChat.id,
+          });
+        }
+
         try {
           const token = localStorage.getItem("token");
 
@@ -115,12 +120,21 @@ function SingleChat({ fetchAgain, setFetchAgain }) {
             config
           );
 
-          socket.current.emit("new message", {
-            data: data,
-            room: selectedChat.id,
-            sender: selectedChat.chatsender.id,
-            receiver: selectedChat.receive.id,
-          });
+          if (selectedChat.chatsender && selectedChat.receive) {
+            socket.current.emit("new message", {
+              data: data,
+              room: selectedChat.id,
+              sender: selectedChat.chatsender.id,
+              receiver: selectedChat.receive.id,
+            });
+          } else {
+            socket.current.emit("new message group", {
+              data: data,
+              room: selectedChat.id,
+              users: selectedChat.users,
+            });
+          }
+
           setMessages([...messages, data]);
         } catch (err) {
           console.log(err.message);
@@ -150,11 +164,17 @@ function SingleChat({ fetchAgain, setFetchAgain }) {
 
     if (!typing) {
       setTyping(true);
-      socket.current.emit("typing", {
-        room: selectedChat.id,
-        sender: selectedChat.chatSenderId,
-        receiver: selectedChat.personId,
-      });
+      if (selectedChat.chatSenderId && selectedChat.personId) {
+        socket.current.emit("typing", {
+          room: selectedChat.id,
+          sender: selectedChat.chatSenderId,
+          receiver: selectedChat.personId,
+        });
+      } else {
+        socket.current.emit("typing group", {
+          room: selectedChat.id,
+        });
+      }
     }
 
     // Debouncing:--
@@ -166,11 +186,17 @@ function SingleChat({ fetchAgain, setFetchAgain }) {
       const timeNow = new Date().getTime();
       const timeDiff = timeNow - lastTypingTime;
       if (timeDiff >= timerLength && typing) {
-        socket.current.emit("stop typing", {
-          room: selectedChat.id,
-          sender: selectedChat.chatSenderId,
-          receiver: selectedChat.personId,
-        });
+        if (selectedChat.chatSenderId && selectedChat.personId) {
+          socket.current.emit("stop typing", {
+            room: selectedChat.id,
+            sender: selectedChat.chatSenderId,
+            receiver: selectedChat.personId,
+          });
+        } else {
+          socket.current.emit("stop typing group", {
+            room: selectedChat.id,
+          });
+        }
         setTyping(false);
       }
     }, timerLength);
@@ -181,32 +207,8 @@ function SingleChat({ fetchAgain, setFetchAgain }) {
     socket.current.emit("setup", user);
     socket.current.on("connected", () => setSocketConnected(true));
 
-    socket.current.on("typing", ({ room, sender, receiver }) => {
-      if (
-        selectedChat !== undefined &&
-        room === selectedChat.id &&
-        receiver === selectedChat.chatSenderId &&
-        sender === selectedChat.personId &&
-        sender === currentReceiver.id
-      ) {
-        setIsTyping(true);
-      }
-    });
-
-    socket.current.on("stop typing", ({ room, sender, receiver }) => {
-      if (
-        selectedChat !== undefined &&
-        room === selectedChat.id &&
-        receiver === selectedChat.chatSenderId &&
-        sender === selectedChat.personId &&
-        sender === currentReceiver.id
-      ) {
-        setIsTyping(false);
-      }
-    });
-
-    return () => {
-      socket.current.off("typing", ({ room, sender, receiver }) => {
+    if (selectedChat?.chatSenderId && selectedChat?.personId) {
+      socket.current.on("typing", ({ room, sender, receiver }) => {
         if (
           selectedChat !== undefined &&
           room === selectedChat.id &&
@@ -217,6 +219,33 @@ function SingleChat({ fetchAgain, setFetchAgain }) {
           setIsTyping(true);
         }
       });
+
+      socket.current.on("stop typing", ({ room, sender, receiver }) => {
+        if (
+          selectedChat !== undefined &&
+          room === selectedChat.id &&
+          receiver === selectedChat.chatSenderId &&
+          sender === selectedChat.personId &&
+          sender === currentReceiver.id
+        ) {
+          setIsTyping(false);
+        }
+      });
+    } else {
+      socket.current.on("typing group", ({ room }) => {
+        if (selectedChat !== undefined && room === selectedChat.id) {
+          setIsTyping(true);
+        }
+      });
+
+      socket.current.on("stop typing group", ({ room }) => {
+        if (selectedChat !== undefined && room === selectedChat.id) {
+          setIsTyping(false);
+        }
+      });
+    }
+
+    return () => {
       socket.current.off();
       socket.current.off("setoff", user);
     };
@@ -228,20 +257,29 @@ function SingleChat({ fetchAgain, setFetchAgain }) {
   }, [selectedChat]);
 
   useEffect(() => {
-    socket.current.on(
-      "message recieved",
-      ({ data, room, sender, receiver }) => {
-        if (
-          selectedChat !== undefined &&
-          room === selectedChat.id &&
-          receiver === selectedChat.chatSenderId &&
-          sender === selectedChat.personId &&
-          sender === currentReceiver.id
-        ) {
+    if (selectedChat?.chatSenderId && selectedChat?.personId) {
+      socket.current.on(
+        "message recieved",
+        ({ data, room, sender, receiver }) => {
+          if (
+            selectedChat !== undefined &&
+            room === selectedChat.id &&
+            receiver === selectedChat.chatSenderId &&
+            sender === selectedChat.personId &&
+            sender === currentReceiver.id
+          ) {
+            setMessages([...messages, data]);
+          }
+        }
+      );
+    } else {
+      socket.current.on("message recieved group", ({ data, room }) => {
+        if (selectedChat !== undefined && room === selectedChat.id) {
           setMessages([...messages, data]);
         }
-      }
-    );
+      });
+    }
+
   }, [socket, selectedChat, messages, currentReceiver]);
 
   return (

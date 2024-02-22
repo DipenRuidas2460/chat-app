@@ -32,10 +32,14 @@ const Message = sequelize.define(
         key: "id",
       },
     },
+    createdAt: {
+      type: DataTypes.STRING,
+    },
   },
   {
     tableName: "Message",
     updatedAt: false,
+    createdAt: false,
   }
 );
 

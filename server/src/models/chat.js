@@ -12,8 +12,6 @@ const Chat = sequelize.define(
     },
     chatName: {
       type: DataTypes.STRING,
-      allowNull: false,
-      trim: true,
     },
     isGroupChat: {
       type: DataTypes.BOOLEAN,
