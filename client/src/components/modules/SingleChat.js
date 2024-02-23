@@ -25,6 +25,8 @@ import { useNavigate } from "react-router-dom";
 import config from "../../config/config";
 import UpdateGroupChatModel from "../miscellaneous/UpdateGroupChatModel";
 
+let selectedChatCompare = null;
+
 function SingleChat({ fetchAgain, setFetchAgain }) {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
@@ -33,7 +35,14 @@ function SingleChat({ fetchAgain, setFetchAgain }) {
   const [socketConnected, setSocketConnected] = useState(false);
   const [typing, setTyping] = useState(false);
   const [istyping, setIsTyping] = useState(false);
-  const { user, selectedChat, setSelectedChat, currentReceiver } = ChatState();
+  const {
+    user,
+    selectedChat,
+    setSelectedChat,
+    currentReceiver,
+    notification,
+    setNotification,
+  } = ChatState();
   const host = config.BCKHOST;
   const socket = useRef(null);
   const toast = useToast();
@@ -55,12 +64,12 @@ function SingleChat({ fetchAgain, setFetchAgain }) {
       setloading(true);
 
       const { data } = await axios.get(
-        `${host}/message/${selectedChat.id}`,
+        `${host}/message/${selectedChat?.id}`,
         config
       );
 
       socket.current.emit("join chat", {
-        room: selectedChat.id,
+        room: selectedChat?.id,
       });
 
       setMessages(data);
@@ -81,15 +90,15 @@ function SingleChat({ fetchAgain, setFetchAgain }) {
   const sendMessages = async (e) => {
     if (e.key === "Enter" || e.type === "click") {
       if (newMessage || selectedFile) {
-        if (selectedChat.chatSenderId && selectedChat.personId) {
+        if (selectedChat?.chatSenderId && selectedChat?.personId) {
           socket.current.emit("stop typing", {
-            room: selectedChat.id,
-            sender: selectedChat.chatSenderId,
-            receiver: selectedChat.personId,
+            room: selectedChat?.id,
+            sender: selectedChat?.chatSenderId,
+            receiver: selectedChat?.personId,
           });
         } else {
           socket.current.emit("stop typing group", {
-            room: selectedChat.id,
+            room: selectedChat?.id,
           });
         }
 
@@ -103,7 +112,7 @@ function SingleChat({ fetchAgain, setFetchAgain }) {
             formData.append("allFiles", selectedFile);
           }
 
-          formData.append("chatId", selectedChat.id);
+          formData.append("chatId", selectedChat?.id);
 
           const config = {
             headers: {
@@ -120,18 +129,18 @@ function SingleChat({ fetchAgain, setFetchAgain }) {
             config
           );
 
-          if (selectedChat.chatsender && selectedChat.receive) {
+          if (selectedChat?.chatsender && selectedChat?.receive) {
             socket.current.emit("new message", {
               data: data,
-              room: selectedChat.id,
-              sender: selectedChat.chatsender.id,
-              receiver: selectedChat.receive.id,
+              room: selectedChat?.id,
+              sender: selectedChat?.chatsender?.id,
+              receiver: selectedChat?.receive?.id,
             });
           } else {
             socket.current.emit("new message group", {
               data: data,
-              room: selectedChat.id,
-              users: selectedChat.users,
+              room: selectedChat?.id,
+              sender: data.senderId,
             });
           }
 
@@ -152,7 +161,7 @@ function SingleChat({ fetchAgain, setFetchAgain }) {
   };
 
   const typingHandler = (e) => {
-    if (e.target.files?.length > 0) {
+    if (e.target?.files?.length > 0) {
       setSelectedFile(e.target.files[0]);
     } else if (e.target.value) {
       setNewMessage(e.target.value);
@@ -164,15 +173,16 @@ function SingleChat({ fetchAgain, setFetchAgain }) {
 
     if (!typing) {
       setTyping(true);
-      if (selectedChat.chatSenderId && selectedChat.personId) {
+      if (selectedChat?.chatSenderId && selectedChat?.personId) {
         socket.current.emit("typing", {
-          room: selectedChat.id,
-          sender: selectedChat.chatSenderId,
-          receiver: selectedChat.personId,
+          room: selectedChat?.id,
+          sender: selectedChat?.chatSenderId,
+          receiver: selectedChat?.personId,
         });
       } else {
         socket.current.emit("typing group", {
-          room: selectedChat.id,
+          room: selectedChat?.id,
+          sender: user?.id,
         });
       }
     }
@@ -180,26 +190,48 @@ function SingleChat({ fetchAgain, setFetchAgain }) {
     // Debouncing:--
 
     const lastTypingTime = new Date().getTime();
-    const timerLength = 2500;
+    const timerLength = 1000;
 
     setTimeout(() => {
       const timeNow = new Date().getTime();
       const timeDiff = timeNow - lastTypingTime;
       if (timeDiff >= timerLength && typing) {
-        if (selectedChat.chatSenderId && selectedChat.personId) {
+        if (selectedChat?.chatSenderId && selectedChat?.personId) {
           socket.current.emit("stop typing", {
-            room: selectedChat.id,
-            sender: selectedChat.chatSenderId,
-            receiver: selectedChat.personId,
+            room: selectedChat?.id,
+            sender: selectedChat?.chatSenderId,
+            receiver: selectedChat?.personId,
           });
         } else {
           socket.current.emit("stop typing group", {
-            room: selectedChat.id,
+            room: selectedChat?.id,
+            sender: user?.id,
           });
         }
         setTyping(false);
       }
     }, timerLength);
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Backspace" && newMessage.trim() === "") {
+      if (selectedChat?.chatSenderId && selectedChat?.personId) {
+        socket.current.emit("stop typing", {
+          room: selectedChat?.id,
+          sender: selectedChat?.chatSenderId,
+          receiver: selectedChat?.personId,
+        });
+      } else {
+        socket.current.emit("stop typing group", {
+          room: selectedChat?.id,
+          sender: user?.id,
+        });
+      }
+    }
+
+    if (e.key === "Backspace" && newMessage.length > 0) {
+      setNewMessage(newMessage.slice(0, -1));
+    }
   };
 
   useEffect(() => {
@@ -211,10 +243,10 @@ function SingleChat({ fetchAgain, setFetchAgain }) {
       socket.current.on("typing", ({ room, sender, receiver }) => {
         if (
           selectedChat !== undefined &&
-          room === selectedChat.id &&
-          receiver === selectedChat.chatSenderId &&
-          sender === selectedChat.personId &&
-          sender === currentReceiver.id
+          room === selectedChat?.id &&
+          receiver === selectedChat?.chatSenderId &&
+          sender === selectedChat?.personId &&
+          sender === currentReceiver?.id
         ) {
           setIsTyping(true);
         }
@@ -223,24 +255,52 @@ function SingleChat({ fetchAgain, setFetchAgain }) {
       socket.current.on("stop typing", ({ room, sender, receiver }) => {
         if (
           selectedChat !== undefined &&
-          room === selectedChat.id &&
-          receiver === selectedChat.chatSenderId &&
-          sender === selectedChat.personId &&
-          sender === currentReceiver.id
+          room === selectedChat?.id &&
+          receiver === selectedChat?.chatSenderId &&
+          sender === selectedChat?.personId &&
+          sender === currentReceiver?.id
         ) {
           setIsTyping(false);
         }
       });
     } else {
-      socket.current.on("typing group", ({ room }) => {
-        if (selectedChat !== undefined && room === selectedChat.id) {
-          setIsTyping(true);
+      socket.current.on("typing group", ({ room, sender }) => {
+        const arr = [...selectedChat?.users];
+        function checkIndex(p) {
+          return p.id === user.id;
+        }
+        const findInd = arr.findIndex(checkIndex);
+        if (findInd !== -1) {
+          arr.splice(findInd, 1);
+          for (const p of arr) {
+            if (
+              selectedChat !== undefined &&
+              room === selectedChat?.id &&
+              p?.id === sender
+            ) {
+              setIsTyping(true);
+            }
+          }
         }
       });
 
-      socket.current.on("stop typing group", ({ room }) => {
-        if (selectedChat !== undefined && room === selectedChat.id) {
-          setIsTyping(false);
+      socket.current.on("stop typing group", ({ room, sender }) => {
+        const newArr = [...selectedChat?.users];
+        function checkIndex(p) {
+          return p.id === user.id;
+        }
+        const findInd = newArr.findIndex(checkIndex);
+        if (findInd !== -1) {
+          newArr.splice(findInd, 1);
+          for (const q of newArr) {
+            if (
+              selectedChat !== undefined &&
+              room === selectedChat?.id &&
+              q?.id === sender
+            ) {
+              setIsTyping(false);
+            }
+          }
         }
       });
     }
@@ -253,6 +313,7 @@ function SingleChat({ fetchAgain, setFetchAgain }) {
 
   useEffect(() => {
     fetchMessages();
+    selectedChatCompare = selectedChat;
     // eslint-disable-next-line
   }, [selectedChat]);
 
@@ -263,24 +324,61 @@ function SingleChat({ fetchAgain, setFetchAgain }) {
         ({ data, room, sender, receiver }) => {
           if (
             selectedChat !== undefined &&
-            room === selectedChat.id &&
-            receiver === selectedChat.chatSenderId &&
-            sender === selectedChat.personId &&
-            sender === currentReceiver.id
+            room === selectedChat?.id &&
+            receiver === selectedChat?.chatSenderId &&
+            sender === selectedChat?.personId &&
+            sender === currentReceiver?.id
           ) {
-            setMessages([...messages, data]);
+            if (!selectedChatCompare || selectedChatCompare.id !== data.id) {
+              if (!notification.includes(data)) {
+                setNotification([data, ...notification]);
+                setFetchAgain(!fetchAgain);
+              }
+            } else {
+              setMessages([...messages, data]);
+            }
           }
         }
       );
     } else {
-      socket.current.on("message recieved group", ({ data, room }) => {
-        if (selectedChat !== undefined && room === selectedChat.id) {
-          setMessages([...messages, data]);
+      socket.current.on("message recieved group", ({ data, room, sender }) => {
+        if (!selectedChatCompare || selectedChatCompare.id !== data.id) {
+          if (!notification.includes(data)) {
+            setNotification([data, ...notification]);
+            setFetchAgain(!fetchAgain);
+          }
+        } else {
+          const arr = [...selectedChat?.users];
+          function checkIndex(p) {
+            return p.id === user.id;
+          }
+          const findInd = arr.findIndex(checkIndex);
+          if (findInd !== -1) {
+            arr.splice(findInd, 1);
+            for (const j of arr) {
+              if (
+                selectedChat !== undefined &&
+                room === selectedChat?.id &&
+                j?.id === sender
+              ) {
+                setMessages([...messages, data]);
+              }
+            }
+          }
         }
       });
     }
-
-  }, [socket, selectedChat, messages, currentReceiver]);
+  }, [
+    socket,
+    selectedChat,
+    messages,
+    currentReceiver,
+    user,
+    fetchAgain,
+    notification,
+    setFetchAgain,
+    setNotification,
+  ]);
 
   return (
     <>
@@ -304,9 +402,9 @@ function SingleChat({ fetchAgain, setFetchAgain }) {
 
             <>
               {messages &&
-                (selectedChat.isGroupChat ? (
+                (selectedChat?.isGroupChat ? (
                   <>
-                    {selectedChat.chatName.toUpperCase()}
+                    {selectedChat?.chatName.toUpperCase()}
                     <UpdateGroupChatModel
                       fetchMessages={fetchMessages}
                       fetchAgain={fetchAgain}
@@ -322,8 +420,8 @@ function SingleChat({ fetchAgain, setFetchAgain }) {
 
                     <ProfileMenu
                       user={getSenderFull(user, [
-                        selectedChat.chatsender,
-                        selectedChat.receive,
+                        selectedChat?.chatsender,
+                        selectedChat?.receive,
                       ])}
                     />
                   </>
@@ -391,11 +489,11 @@ function SingleChat({ fetchAgain, setFetchAgain }) {
                   </Box>
                 )}
                 <Input
-                  variant="filled"
                   bg="#E0E0E0"
-                  placeholder="Enter a message..."
-                  onChange={typingHandler}
                   value={newMessage}
+                  onChange={typingHandler}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Enter a message..."
                 />
 
                 <Button

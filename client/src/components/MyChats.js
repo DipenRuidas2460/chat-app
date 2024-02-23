@@ -75,7 +75,7 @@ function MyChats({ fetchAgain }) {
         <GroupChatModal>
           <Button
             d="flex"
-            fontSize={{ base: "17px", md: "10px", lg: "17px" }}
+            fontSize={{ base: "17px", md: "14px", lg: "17px" }}
             width="100%"
             rightIcon={<AddIcon />}
           >
