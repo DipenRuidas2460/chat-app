@@ -63,11 +63,6 @@ const sendMessage = asyncHandler(async (req, res) => {
 
     const message = await Message.create(newMessage);
 
-    await Chat.update(
-      { createdAt: message.createdAt },
-      { where: { id: chatId } }
-    );
-
     const populatedMessage = await Message.findByPk(message.id, {
       include: [
         {
@@ -116,6 +111,24 @@ const sendMessage = asyncHandler(async (req, res) => {
       }
       await populatedMessage.save();
     }
+
+    console.log("populate:-", JSON.stringify(populatedMessage));
+
+    const obj = {
+      id: populatedMessage.id,
+      sender: populatedMessage.sender,
+      receiver: populatedMessage.msg.isGroupChat
+        ? null
+        : populatedMessage.senderId !== populatedMessage.msg.receive.id
+        ? populatedMessage.msg.receive
+        : populatedMessage.msg.chatsender.id,
+    };
+
+    await Chat.update(
+      { createdAt: message.createdAt, latestMessage: populatedMessage },
+      { where: { id: chatId } }
+    );
+
     return res.status(200).json(populatedMessage);
   } catch (error) {
     console.log(error);

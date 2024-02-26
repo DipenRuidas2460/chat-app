@@ -17,7 +17,10 @@ const Chat = sequelize.define(
       type: DataTypes.BOOLEAN,
       defaultValue: false,
     },
-    users:{
+    users: {
+      type: DataTypes.JSON,
+    },
+    latestMessage: {
       type: DataTypes.JSON,
     },
     chatSenderId: {

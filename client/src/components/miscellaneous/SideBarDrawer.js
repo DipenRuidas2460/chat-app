@@ -8,7 +8,7 @@ import {
   MenuItem,
   MenuList,
 } from "@chakra-ui/react";
-import React, { useEffect, useRef } from "react";
+import React, { createRef } from "react";
 import { ChatState } from "../../context/ChatProvider";
 import ProfileMenu from "./ProfileMenu";
 import config from "../../config/config";
@@ -21,33 +21,22 @@ function SideBarDrawer() {
   const { user, notification, setNotification, setSelectedChat } = ChatState();
   const host = config.BCKHOST;
   const navigate = useNavigate();
-  const badgeRef = useRef(null);
+  const badgeRef = createRef();;
 
   const handleLogOut = () => {
     localStorage.removeItem("token");
     navigate("/");
   };
 
-  useEffect(() => {
-    console.log("notification:--", notification)
-  }, [notification])
-  
-
   return (
     <>
       <div className="sidebar-chat">
         <div
-          style={{
-            width: "85%",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "self-start",
-            justifyContent: "space-around",
-          }}
+          className="sidebar-chat-parent"
         >
           <Menu>
             <MenuItem
-              w="80%"
+              w="100%"
               fontWeight="600"
               fontSize="20px"
               fontFamily="Montserrat"
@@ -78,7 +67,7 @@ function SideBarDrawer() {
                   }}
                 >
                   {notif.msg.isGroupChat
-                    ? `New Message in ${notif.msg.chatName}`
+                    ? `New Message from ${notif.msg.chatName}`
                     : `New Message from ${getSender(user, [
                         notif.msg.chatsender,
                         notif.msg.receive,

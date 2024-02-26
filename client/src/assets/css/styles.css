@@ -11832,8 +11832,12 @@ body {
 }
 
 @media (max-width: 300px) {
+  .sidebar-chat-parent{
+    width: 80%;
+  } 
+
   .available-text{
-    width: 37%;
+    width: 60%;
     margin-left:12px;
     font-size: 8px;
   }
@@ -12420,10 +12424,14 @@ body {
 }
 
 @media (min-width: 300px) and (max-width: 500px) {
+  .sidebar-chat-parent{
+    width: 50%;
+  }
+
   .available-text{
-    width: 27%;
+    width: 45%;
     margin-left:12px;
-    font-size: 8px;
+    font-size: 9px;
   }
 
   .chat-name-icon{
@@ -13006,8 +13014,12 @@ body {
 }
 
 @media (min-width: 500px) and (max-width: 800px) {
+  .sidebar-chat-parent{
+    width: 50%;
+  }
+
   .available-text{
-    width: 14%;
+    width: 24%;
     margin-left:15px;
     font-size: 9px;
   }
@@ -13590,9 +13602,12 @@ body {
 }
 
 @media (min-width: 800px) and (max-width: 1150px) {
+  .sidebar-chat-parent{
+    width: 40%;
+  }
 
   .available-text{
-    width: 9%;
+    width: 22%;
     margin-left:15px;
     font-size: 10px;
   }
@@ -14163,8 +14178,12 @@ body {
 }
 
 @media (min-width: 1150px) and (max-width: 1420px) {
+  .sidebar-chat-parent{
+    width: 40%;
+  }
+
   .available-text{
-    width: 7%;
+    width: 20%;
     margin-left:15px;
     font-size: 11px;
   }
@@ -14732,8 +14751,12 @@ body {
 }
 
 @media (min-width: 1421px) {
+  .sidebar-chat-parent{
+    width: 40%;
+  }
+
   .available-text{
-    width: 6%;
+    width: 16%;
     margin-left:15px;
     font-size: 13px;
   }
@@ -15292,10 +15315,22 @@ body {
   }
 }
 
+.profile-photo-icon{
+  display:flex;
+}
+
+.sidebar-chat-parent{
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: self-start;
+}
+
 .available-text{
   display: flex;
   justify-content: center;
   align-items: center;
+  text-align: center;
   border-radius: 7px;
   background-color: #009F10;
   color: #fff;

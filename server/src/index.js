@@ -60,7 +60,7 @@ io.on("connection", (socket) => {
   socket.on("typing group", ({ room, sender }) => {
     io.to(room).emit("typing group", {
       room: room,
-      sender:sender
+      sender: sender,
     });
   });
 
@@ -75,15 +75,14 @@ io.on("connection", (socket) => {
   socket.on("stop typing group", ({ room, sender }) => {
     io.to(room).emit("stop typing group", {
       room: room,
-      sender:sender
+      sender: sender,
     });
   });
 
   socket.on("new message", ({ data, room, sender, receiver }) => {
     if (data.msg.personId === data.senderId) return;
-    if (!data.msg.chatSenderId && !data.msg.personId) {
-      return console.log("Message Sender or chat sender not defined!");
-    }
+
+    socket.in(data.msg.personId).emit("notification", { data: data });
 
     io.to(room).emit("message recieved", {
       data: data,
@@ -94,6 +93,14 @@ io.on("connection", (socket) => {
   });
 
   socket.on("new message group", ({ data, room, sender }) => {
+    const users = data.msg.users;
+
+    users?.forEach((ele) => {
+      if (ele.id !== data.senderId) {
+        socket.in(ele.id).emit("notification-group", { data: data });
+      }
+    });
+
     io.to(room).emit("message recieved group", {
       data: data,
       room: room,
