@@ -197,10 +197,10 @@ const UpdateGroupChatModel = ({
       fetchMessages();
       setLoading(false);
     } catch (error) {
-      console.log(error);
+      console.log(error.message);
       toast({
-        title: "Error Occured!",
-        description: error.message,
+        title: "User not present!",
+        description: "Please refresh chat page",
         status: "error",
         duration: 5000,
         isClosable: true,

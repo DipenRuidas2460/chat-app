@@ -112,20 +112,14 @@ const sendMessage = asyncHandler(async (req, res) => {
       await populatedMessage.save();
     }
 
-    console.log("populate:-", JSON.stringify(populatedMessage));
-
     const obj = {
-      id: populatedMessage.id,
-      sender: populatedMessage.sender,
-      receiver: populatedMessage.msg.isGroupChat
-        ? null
-        : populatedMessage.senderId !== populatedMessage.msg.receive.id
-        ? populatedMessage.msg.receive
-        : populatedMessage.msg.chatsender.id,
+      sender: `${populatedMessage.sender.firstName} ${populatedMessage.sender.lastName}`,
+      content: populatedMessage.content,
+      allFiles: populatedMessage.allFiles,
     };
 
     await Chat.update(
-      { createdAt: message.createdAt, latestMessage: populatedMessage },
+      { createdAt: message.createdAt, latestMessage: obj },
       { where: { id: chatId } }
     );
 

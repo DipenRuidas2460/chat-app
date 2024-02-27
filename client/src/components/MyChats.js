@@ -108,10 +108,23 @@ function MyChats({ fetchAgain }) {
               >
                 <Text>
                   {chat.isGroupChat
-                    ? chat.chatName 
-                    : getSender(loggedUser, [chat.chatsender, chat.receive])
-                  }
+                    ? chat.chatName
+                    : getSender(loggedUser, [chat.chatsender, chat.receive])}
                 </Text>
+                {/* {chat.latestMessage && (
+                  <Text fontSize="xs">
+                    <b>{chat.latestMessage.sender} : </b>
+                    {chat.latestMessage.content
+                      ? chat.latestMessage.content.length > 50
+                        ? chat.latestMessage.content.substring(0, 51) + "..."
+                        : chat.latestMessage.content
+                      : chat.latestMessage.allFiles
+                      ? chat.latestMessage.allFiles.length > 50
+                        ? chat.latestMessage.allFiles.substring(0, 51) + "..."
+                        : chat.latestMessage.allFiles
+                      : ""}
+                  </Text>
+                )} */}
               </Box>
             ))}
           </Stack>

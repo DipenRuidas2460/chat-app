@@ -63,7 +63,7 @@ function SideBarDrawer() {
                   key={i}
                   onClick={() => {
                     setSelectedChat(notif.msg);
-                    setNotification(notification.filter((n) => n !== notif));
+                    setNotification(notification.filter((n) => n.id !== notif.id));
                   }}
                 >
                   {notif.msg.isGroupChat

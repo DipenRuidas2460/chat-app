@@ -268,7 +268,10 @@ function SingleChat({ fetchAgain, setFetchAgain }) {
       });
     } else {
       socket.current.on("typing group", ({ room, sender }) => {
-        const arr = [...selectedChat?.users];
+        let arr = [];
+        if (selectedChat) {
+          arr = [...selectedChat.users];
+        }
         function checkIndex(p) {
           return p.id === user.id;
         }
@@ -288,7 +291,11 @@ function SingleChat({ fetchAgain, setFetchAgain }) {
       });
 
       socket.current.on("stop typing group", ({ room, sender }) => {
-        const newArr = [...selectedChat?.users];
+        let newArr = [];
+        if (selectedChat) {
+          newArr = [...selectedChat?.users];
+        }
+
         function checkIndex(p) {
           return p.id === user.id;
         }
@@ -349,7 +356,7 @@ function SingleChat({ fetchAgain, setFetchAgain }) {
     });
 
     socket.current.on("message recieved group", ({ data, room, sender }) => {
-      const arr = [...selectedChat?.users];
+      const arr = [...data?.msg?.users];
       function checkIndex(p) {
         return p.id === user.id;
       }
@@ -357,12 +364,7 @@ function SingleChat({ fetchAgain, setFetchAgain }) {
       if (findInd !== -1) {
         arr.splice(findInd, 1);
         for (const j of arr) {
-          if (!selectedChatCompare) {
-            if (!notification.includes(data)) {
-              setNotification([data, ...notification]);
-              setFetchAgain(!fetchAgain);
-            }
-          } else if (
+          if (
             selectedChat !== undefined &&
             room === selectedChat?.id &&
             j?.id === sender
@@ -375,12 +377,74 @@ function SingleChat({ fetchAgain, setFetchAgain }) {
 
     socket.current.on("notification-group", ({ data }) => {
       if (!selectedChatCompare || selectedChatCompare?.id !== data.chatId) {
-        if (!notification.includes(data)) {
-          setNotification([data, ...notification]);
-          setFetchAgain(!fetchAgain);
+        if (notification[0]?.id !== data.id) {
+          if (!notification.includes(data)) {
+            setNotification([data, ...notification]);
+            setFetchAgain(!fetchAgain);
+          }
         }
       }
     });
+
+    return () => {
+      socket.current.off(
+        "message recieved",
+        ({ data, room, sender, receiver }) => {
+          if (selectedChat && room === selectedChat?.id) {
+            if (
+              (receiver === selectedChat?.chatsender.id &&
+                sender === selectedChat?.receive.id) ||
+              (receiver === data.msg.chatsender.id &&
+                sender === data.msg.receive.id) ||
+              (sender === selectedChat?.chatsender.id &&
+                receiver === selectedChat?.receive.id)
+            ) {
+              setMessages([...messages, data]);
+            }
+          }
+        }
+      );
+
+      socket.current.off("notification", ({ data }) => {
+        if (!selectedChatCompare || selectedChatCompare?.id !== data.chatId) {
+          if (!notification.includes(data)) {
+            setNotification([data, ...notification]);
+            setFetchAgain(!fetchAgain);
+          }
+        }
+      });
+
+      socket.current.off("message recieved group", ({ data, room, sender }) => {
+        const arr = [...data?.msg?.users];
+        function checkIndex(p) {
+          return p.id === user.id;
+        }
+        const findInd = arr.findIndex(checkIndex);
+        if (findInd !== -1) {
+          arr.splice(findInd, 1);
+          for (const j of arr) {
+            if (
+              selectedChat !== undefined &&
+              room === selectedChat?.id &&
+              j?.id === sender
+            ) {
+              setMessages([...messages, data]);
+            }
+          }
+        }
+      });
+
+      socket.current.off("notification-group", ({ data }) => {
+        if (!selectedChatCompare || selectedChatCompare?.id !== data.chatId) {
+          if (notification[0]?.id !== data.id) {
+            if (!notification.includes(data)) {
+              setNotification([data, ...notification]);
+              setFetchAgain(!fetchAgain);
+            }
+          }
+        }
+      });
+    };
   }, [
     socket,
     selectedChat,
